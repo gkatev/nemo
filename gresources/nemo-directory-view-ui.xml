@@ -125,6 +125,7 @@
             <placeholder name="ActionsPlaceholder"/>
 		</placeholder>
 		<separator name="Open terminal separator"/>
+        <menuitem name="ReloadFolder" action="ReloadFolder"/>
         <menuitem name="OpenInTerminal" action="OpenInTerminal"/>
         <menuitem name="OpenAsRoot" action="OpenAsRoot"/>
 		<separator name="View items separator"/>
@@ -209,6 +210,7 @@
 		</menu>
 	</placeholder>
 	<separator name="Advanced separator"/>
+	<menuitem name="ReloadFolder" action="ReloadFolder"/>
 	<menuitem name="OpenInTerminal" action="OpenInTerminal"/>
 	<menuitem name="OpenAsRoot" action="OpenAsRoot"/>
     <menuitem name="FollowSymbolicLink" action="FollowSymbolicLink"/>
