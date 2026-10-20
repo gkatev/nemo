@@ -3743,7 +3743,7 @@ expanded_row_reload_cb (GtkTreeView *tree_view, GtkTreePath *path,
  * them), along with every expanded folder inside them. If no folder is
  * selected, reload the entire view (again, in place). */
 static void
-action_reload_folder_callback (GtkAction *action, gpointer callback_data)
+action_refresh_folder_callback (GtkAction *action, gpointer callback_data)
 {
 	NemoListView *list_view;
 	GList *targets, *node;
@@ -3785,10 +3785,10 @@ files_are_all_directories (GList *files)
 }
 
 static const GtkActionEntry list_view_entries[] = {
-  /* name, stock id */         { NEMO_ACTION_RELOAD_FOLDER, "xsi-view-refresh-symbolic",
-  /* label, accelerator */       N_("Reload"), "",
-  /* tooltip */                  N_("Reload the contents of the folder"),
-				 G_CALLBACK (action_reload_folder_callback) },
+  /* name, stock id */         { NEMO_ACTION_REFRESH_FOLDER, "xsi-view-refresh-symbolic",
+  /* label, accelerator */       N_("Refresh"), "",
+  /* tooltip */                  N_("Refresh the contents of the folder"),
+				 G_CALLBACK (action_refresh_folder_callback) },
 };
 
 static void
@@ -3869,7 +3869,7 @@ nemo_list_view_update_menus (NemoView *view)
 	showing_search = NEMO_IS_SEARCH_DIRECTORY (nemo_view_get_model (view));
 
 	action = gtk_action_group_get_action (list_view->details->list_action_group,
-					     NEMO_ACTION_RELOAD_FOLDER);
+					     NEMO_ACTION_REFRESH_FOLDER);
 	gtk_action_set_visible (action, files_are_all_directories (selection) &&
 					!in_virtual_directory &&
 					(!showing_search || selection != NULL));

@@ -823,9 +823,9 @@
       <default>false</default>
       <summary>Show the selection context menu's Move To submenu.</summary>
     </key>
-    <key name="selection-menu-reload-folder" type="b">
+    <key name="selection-menu-refresh-folder" type="b">
       <default>false</default>
-      <summary>Show the selection context menu's Reload item.</summary>
+      <summary>Show the selection context menu's Refresh item.</summary>
     </key>
     <key name="selection-menu-open-in-terminal" type="b">
       <default>true</default>
@@ -853,9 +853,9 @@
       <default>true</default>
       <summary>Show the background context menu's Scripts submenu.</summary>
     </key>
-    <key name="background-menu-reload-folder" type="b">
+    <key name="background-menu-refresh-folder" type="b">
       <default>false</default>
-      <summary>Show the background context menu's Reload item.</summary>
+      <summary>Show the background context menu's Refresh item.</summary>
     </key>
     <key name="background-menu-open-in-terminal" type="b">
       <default>true</default>

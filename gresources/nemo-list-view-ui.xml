@@ -8,13 +8,13 @@
 <popup name="background">
 	<placeholder name="Before Zoom Items">
 		<placeholder name="List View Items">
-			<menuitem name="ReloadFolder" action="ReloadFolder"/>
+			<menuitem name="RefreshFolder" action="RefreshFolder"/>
 		</placeholder>
 	</placeholder>
 </popup>
 <popup name="selection">
 	<placeholder name="List View Items">
-		<menuitem name="ReloadFolder" action="ReloadFolder"/>
+		<menuitem name="RefreshFolder" action="RefreshFolder"/>
 	</placeholder>
 </popup>
 </ui>

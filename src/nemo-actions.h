@@ -146,7 +146,7 @@
 #define NEMO_ACTION_STATUSBAR_TREEVIEW "Statusbar Treeview"
 #define NEMO_ACTION_STATUSBAR_SIDEBAR_TOGGLE "Statusbar Sidebar Toggle"
 
-#define NEMO_ACTION_RELOAD_FOLDER "ReloadFolder"
+#define NEMO_ACTION_REFRESH_FOLDER "RefreshFolder"
 #define NEMO_ACTION_OPEN_IN_TERMINAL "OpenInTerminal"
 #define NEMO_ACTION_FOLLOW_SYMLINK "FollowSymbolicLink"
 #define NEMO_ACTION_OPEN_CONTAINING_FOLDER "OpenContainingFolder"
@@ -223,8 +223,8 @@ static const ConfigurableMenuItemInfo CONFIGURABLE_MENU_ITEM_INFO [] = {
     { NEMO_ACTION_MOVE_TO_MENU, "selection_menu__move_to_check",
      "/selection/File Actions/MoveToMenu", "selection-menu-move-to" },
 
-    { NEMO_ACTION_RELOAD_FOLDER, "selection_menu__reload_folder_check",
-     "/selection/List View Items/ReloadFolder", "selection-menu-reload-folder" },
+    { NEMO_ACTION_REFRESH_FOLDER, "selection_menu__refresh_folder_check",
+     "/selection/List View Items/RefreshFolder", "selection-menu-refresh-folder" },
 
     { NEMO_ACTION_OPEN_IN_TERMINAL, "selection_menu__open_in_terminal_check",
      "/selection/OpenInTerminal", "selection-menu-open-in-terminal" },
@@ -246,8 +246,8 @@ static const ConfigurableMenuItemInfo CONFIGURABLE_MENU_ITEM_INFO [] = {
     { NEMO_ACTION_SCRIPTS, "background_menu__scripts_check",
      "/background/Before Zoom Items/New Object Items/Scripts", "background-menu-scripts" },
 
-    { NEMO_ACTION_RELOAD_FOLDER, "background_menu__reload_folder_check",
-     "/background/Before Zoom Items/List View Items/ReloadFolder", "background-menu-reload-folder" },
+    { NEMO_ACTION_REFRESH_FOLDER, "background_menu__refresh_folder_check",
+     "/background/Before Zoom Items/List View Items/RefreshFolder", "background-menu-refresh-folder" },
 
     { NEMO_ACTION_OPEN_IN_TERMINAL, "background_menu__open_in_terminal_check",
      "/background/Before Zoom Items/OpenInTerminal", "background-menu-open-in-terminal" },

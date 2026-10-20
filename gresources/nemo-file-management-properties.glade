@@ -3889,8 +3889,8 @@ along with .  If not, see <http://www.gnu.org/licenses/>.
                                                 <property name="can-focus">True</property>
                                                 <property name="selectable">False</property>
                                                 <child>
-                                                  <object class="GtkCheckButton" id="selection_menu__reload_folder_check">
-                                                    <property name="label" translatable="yes">Reload</property>
+                                                  <object class="GtkCheckButton" id="selection_menu__refresh_folder_check">
+                                                    <property name="label" translatable="yes">Refresh</property>
                                                     <property name="visible">True</property>
                                                     <property name="can-focus">True</property>
                                                     <property name="receives-default">False</property>
@@ -4074,8 +4074,8 @@ along with .  If not, see <http://www.gnu.org/licenses/>.
                                                 <property name="can-focus">True</property>
                                                 <property name="selectable">False</property>
                                                 <child>
-                                                  <object class="GtkCheckButton" id="background_menu__reload_folder_check">
-                                                    <property name="label" translatable="yes">Reload</property>
+                                                  <object class="GtkCheckButton" id="background_menu__refresh_folder_check">
+                                                    <property name="label" translatable="yes">Refresh</property>
                                                     <property name="visible">True</property>
                                                     <property name="can-focus">True</property>
                                                     <property name="receives-default">False</property>
