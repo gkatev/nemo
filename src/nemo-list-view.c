@@ -28,6 +28,7 @@
 #include <config.h>
 #include "nemo-list-view.h"
 
+#include "nemo-actions.h"
 #include "nemo-application.h"
 #include "nemo-list-model.h"
 #include <libnemo-private/nemo-fzy-utils.h>
@@ -60,6 +61,7 @@
 #include <libnemo-private/nemo-icon-dnd.h>
 #include <libnemo-private/nemo-metadata.h>
 #include <libnemo-private/nemo-module.h>
+#include <libnemo-private/nemo-search-directory.h>
 #include <libnemo-private/nemo-thumbnails.h>
 #include <libnemo-private/nemo-tree-view-drag-dest.h>
 #include <libnemo-private/nemo-clipboard.h>
@@ -3679,6 +3681,116 @@ nemo_list_view_select_all (NemoView *view)
 	gtk_tree_selection_select_all (gtk_tree_view_get_selection (NEMO_LIST_VIEW (view)->details->tree_view));
 }
 
+/* Reloads the folder at one row. The row's file is the folder as an item in
+ * its parent's listing, the directory is that same folder as a container -
+ * reloading is something only the container can do. */
+static void
+reload_folder_at_path (NemoListModel *model, GtkTreePath *path)
+{
+	NemoFile *file;
+	NemoDirectory *directory;
+
+	file = nemo_list_model_file_for_path (model, path);
+	if (!nemo_file_is_directory (file)) {
+		nemo_file_unref (file);
+		return;
+	}
+
+	directory = nemo_directory_get_for_file (file);
+	nemo_directory_force_reload (directory);
+
+	nemo_directory_unref (directory);
+	nemo_file_unref (file);
+}
+
+/* Called for each expanded folder in the list view. If this folder
+ * is under one of the targets, reload it. Doing this in the callback
+ * is safe since it only asynchronously queues a reload, and therefore
+ * does not disturb the tree while we are still walking it. */
+static void
+expanded_row_reload_cb (GtkTreeView *tree_view, GtkTreePath *path,
+                        gpointer callback_data)
+{
+	NemoListModel *model;
+	GList *targets;
+
+	targets = callback_data;
+
+	if (targets != NULL) {
+		gboolean is_descendant = FALSE;
+		GList *node;
+
+		for (node = targets; node != NULL; node = node->next) {
+			// If this path was in targets, we already reloaded it
+			if (gtk_tree_path_compare (path, node->data) == 0) {
+				return;
+			} else if (gtk_tree_path_is_descendant (path, node->data)) {
+				is_descendant = TRUE;
+			}
+		}
+
+		// Only reload folders that are descendants of our targets
+		if (!is_descendant) {
+			return;
+		}
+	}
+
+	model = NEMO_LIST_MODEL (gtk_tree_view_get_model (tree_view));
+	reload_folder_at_path (model, path);
+}
+
+/* Re-enumerate the selected folders in place (i.e., without collapsing
+ * them), along with every expanded folder inside them. If no folder is
+ * selected, reload the entire view (again, in place). */
+static void
+action_reload_folder_callback (GtkAction *action, gpointer callback_data)
+{
+	NemoListView *list_view;
+	GList *targets, *node;
+
+	list_view = NEMO_LIST_VIEW (callback_data);
+
+	targets = gtk_tree_selection_get_selected_rows (
+		gtk_tree_view_get_selection (list_view->details->tree_view), NULL);
+
+	if (targets == NULL) {
+		nemo_directory_force_reload (nemo_view_get_model (NEMO_VIEW (list_view)));
+	} else {
+		/* Explicitly reload every target; if they are not expanded,
+		 * they won't be visited by map_expanded_rows(). */
+		for (node = targets; node != NULL; node = node->next) {
+			reload_folder_at_path (list_view->details->model, node->data);
+		}
+	}
+
+	// Reload expanded subdirectories
+	gtk_tree_view_map_expanded_rows (list_view->details->tree_view,
+		expanded_row_reload_cb, targets);
+
+	g_list_free_full (targets, (GDestroyNotify) gtk_tree_path_free);
+}
+
+static gboolean
+files_are_all_directories (GList *files)
+{
+	GList *l;
+
+	for (l = files; l != NULL; l = l->next) {
+		if (!nemo_file_is_directory (NEMO_FILE (l->data))) {
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static const GtkActionEntry list_view_entries[] = {
+  /* name, stock id */         { NEMO_ACTION_RELOAD_FOLDER, "xsi-view-refresh-symbolic",
+  /* label, accelerator */       N_("Reload"), "",
+  /* tooltip */                  N_("Reload the contents of the folder"),
+				 G_CALLBACK (action_reload_folder_callback) },
+};
+
 static void
 nemo_list_view_merge_menus (NemoView *view)
 {
@@ -3695,6 +3807,10 @@ nemo_list_view_merge_menus (NemoView *view)
   action_group = gtk_action_group_new ("ListViewActions");
   gtk_action_group_set_translation_domain (action_group, GETTEXT_PACKAGE);
   list_view->details->list_action_group = action_group;
+
+  gtk_action_group_add_actions (action_group,
+				list_view_entries, G_N_ELEMENTS (list_view_entries),
+				list_view);
 
   gtk_ui_manager_insert_action_group (ui_manager, action_group, 0);
   g_object_unref (action_group); /* owned by ui manager */
@@ -3727,6 +3843,11 @@ static void
 nemo_list_view_update_menus (NemoView *view)
 {
 	NemoListView *list_view;
+	NemoFile *directory_as_file;
+	GtkAction *action;
+	GList *selection;
+	gboolean in_virtual_directory;
+	gboolean showing_search;
 
         list_view = NEMO_LIST_VIEW (view);
 
@@ -3735,6 +3856,29 @@ nemo_list_view_update_menus (NemoView *view)
 		return;
 	}
 
+	selection = nemo_view_get_selection (view);
+	directory_as_file = nemo_view_get_directory_as_file (view);
+
+	/* Reloading a folder we are not looking inside of only tells us its item
+	 * count, and in these the count is either meaningless or not ours to
+	 * refresh. A folder found by a search is an ordinary folder and can be
+	 * reloaded, the search itself cannot. */
+	in_virtual_directory = directory_as_file != NULL &&
+			       (nemo_file_is_in_recent (directory_as_file) ||
+				nemo_file_is_in_favorites (directory_as_file));
+	showing_search = NEMO_IS_SEARCH_DIRECTORY (nemo_view_get_model (view));
+
+	action = gtk_action_group_get_action (list_view->details->list_action_group,
+					     NEMO_ACTION_RELOAD_FOLDER);
+	gtk_action_set_visible (action, files_are_all_directories (selection) &&
+					!in_virtual_directory &&
+					(!showing_search || selection != NULL));
+
+	nemo_file_list_free (selection);
+
+	/* Last, because the parent applies the context menu visibility
+	 * preferences at the end of its update, and those have to be applied on
+	 * top of the visibility we just decided. */
 	NEMO_VIEW_CLASS (nemo_list_view_parent_class)->update_menus (view);
 }
 

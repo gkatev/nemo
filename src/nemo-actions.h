@@ -224,7 +224,7 @@ static const ConfigurableMenuItemInfo CONFIGURABLE_MENU_ITEM_INFO [] = {
      "/selection/File Actions/MoveToMenu", "selection-menu-move-to" },
 
     { NEMO_ACTION_RELOAD_FOLDER, "selection_menu__reload_folder_check",
-     "/selection/ReloadFolder", "selection-menu-reload-folder" },
+     "/selection/List View Items/ReloadFolder", "selection-menu-reload-folder" },
 
     { NEMO_ACTION_OPEN_IN_TERMINAL, "selection_menu__open_in_terminal_check",
      "/selection/OpenInTerminal", "selection-menu-open-in-terminal" },
@@ -247,7 +247,7 @@ static const ConfigurableMenuItemInfo CONFIGURABLE_MENU_ITEM_INFO [] = {
      "/background/Before Zoom Items/New Object Items/Scripts", "background-menu-scripts" },
 
     { NEMO_ACTION_RELOAD_FOLDER, "background_menu__reload_folder_check",
-     "/background/Before Zoom Items/ReloadFolder", "background-menu-reload-folder" },
+     "/background/Before Zoom Items/List View Items/ReloadFolder", "background-menu-reload-folder" },
 
     { NEMO_ACTION_OPEN_IN_TERMINAL, "background_menu__open_in_terminal_check",
      "/background/Before Zoom Items/OpenInTerminal", "background-menu-open-in-terminal" },

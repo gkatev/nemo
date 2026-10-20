@@ -7449,68 +7449,6 @@ action_open_in_terminal_callback(GtkAction *action,
     }
 }
 
-/* Re-enumerate a folder in place (i.e., without collapsing it), as
- * well as all its children in the list view that are expanded. */
-static void
-reload_folder (NemoView *view,
-               NemoFile *file)
-{
-    NemoDirectory *directory;
-    GFile *location;
-    GList *node;
-
-    directory = nemo_directory_get_for_file (file);
-    location = nemo_file_get_location (file);
-
-    nemo_directory_force_reload (directory);
-
-    for (node = view->details->subdirectory_list; node != NULL; node = node->next) {
-        NemoDirectory *subdirectory;
-        GFile *subdirectory_location;
-
-        subdirectory = node->data;
-        subdirectory_location = nemo_directory_get_location (subdirectory);
-
-        if (g_file_has_prefix (subdirectory_location, location)) {
-            nemo_directory_force_reload (subdirectory);
-        }
-
-        g_object_unref (subdirectory_location);
-    }
-
-    g_object_unref (location);
-    nemo_directory_unref (directory);
-}
-
-static void
-action_reload_folder_callback (GtkAction *action,
-                               gpointer callback_data)
-{
-    NemoView *view;
-    GList *selection, *node;
-
-    view = NEMO_VIEW (callback_data);
-    selection = nemo_view_get_selection (view);
-
-    if (selection == NULL) {
-        NemoFile *file = nemo_view_get_directory_as_file (view);
-        
-        if (file != NULL) {
-            reload_folder (view, file);
-        }
-    } else {
-        for (node = selection; node != NULL; node = node->next) {
-            NemoFile *file = NEMO_FILE (node->data);
-
-            if (nemo_file_is_directory (file)) {
-                reload_folder (view, file);
-            }
-        }
-    }
-
-    nemo_file_list_free (selection);
-}
-
 static void
 invoke_external_bulk_rename_utility (NemoView *view,
 				     GList *selection)
@@ -8451,10 +8389,6 @@ static const GtkActionEntry directory_view_entries[] = {
   /* label, accelerator */       N_("Open as Root"), "",
   /* tooltip */                  N_("Open the folder with administration privileges"),
 				 G_CALLBACK (action_open_as_root_callback) },
-  /* name, stock id */         { NEMO_ACTION_RELOAD_FOLDER, "xsi-view-refresh-symbolic",
-  /* label, accelerator */       N_("Reload"), "",
-  /* tooltip */                  N_("Reload the contents of the folder"),
-				 G_CALLBACK (action_reload_folder_callback) },
 
   /* name, stock id */         { NEMO_ACTION_FOLLOW_SYMLINK, "xsi-go-jump-symbolic",
   /* label, accelerator */       N_("Follow link to original file"), "",
@@ -9759,21 +9693,6 @@ can_delete_all (GList *files)
 }
 
 static gboolean
-all_directories (GList *files)
-{
-	NemoFile *file;
-	GList *l;
-
-	for (l = files; l != NULL; l = l->next) {
-		file = l->data;
-		if (!nemo_file_is_directory (file)) {
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
 has_writable_extra_pane (NemoView *view)
 {
 	NemoView *other_view;
@@ -9863,7 +9782,6 @@ real_update_menus (NemoView *view)
     selection_contains_favorites = showing_favorites_directory (view);
     selection_contains_directory = directory_in_selection (view, selection);
     selection_contains_trash = all_selected_items_in_trash (view, selection);
-    showing_search = view->details->model && NEMO_IS_SEARCH_DIRECTORY (view->details->model);
 	can_create_files = nemo_view_supports_creating_files (view);
 	can_delete_files =
 		can_delete_all (selection) &&
@@ -9918,16 +9836,6 @@ real_update_menus (NemoView *view)
     action = gtk_action_group_get_action (view->details->dir_action_group,
                                          NEMO_ACTION_OPEN_IN_TERMINAL);
     gtk_action_set_visible (action, no_selection_or_one_dir);
-
-    /* Reloading a folder, without opening it, and/or without reloading the
-     * entire view (NEMO_ACTION_RELOAD) only makes sense in the list view. */
-    action = gtk_action_group_get_action (view->details->dir_action_group,
-                                         NEMO_ACTION_RELOAD_FOLDER);
-    gtk_action_set_visible (action, NEMO_IS_LIST_VIEW (view) &&
-                                    all_directories (selection) &&
-                                    !selection_contains_recent &&
-                                    !selection_contains_favorites &&
-                                    (!showing_search || selection_count > 0));
 
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      NEMO_ACTION_NEW_FOLDER);
@@ -10134,6 +10042,8 @@ real_update_menus (NemoView *view)
 		      NULL);
 	gtk_action_set_sensitive (action, !nemo_trash_monitor_is_empty ());
 	gtk_action_set_visible (action, should_show_empty_trash (view));
+
+    showing_search = view->details->model && NEMO_IS_SEARCH_DIRECTORY (view->details->model);
 
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      NEMO_ACTION_SELECT_ALL);
