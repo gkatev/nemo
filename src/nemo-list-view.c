@@ -28,7 +28,6 @@
 #include <config.h>
 #include "nemo-list-view.h"
 
-#include "nemo-actions.h"
 #include "nemo-application.h"
 #include "nemo-list-model.h"
 #include <libnemo-private/nemo-fzy-utils.h>
@@ -37,6 +36,7 @@
 #include "nemo-view-factory.h"
 #include "nemo-window.h"
 #include "nemo-window-slot.h"
+#include "nemo-actions.h"
 
 #include <string.h>
 #include <eel/eel-vfs-extensions.h>
@@ -61,10 +61,10 @@
 #include <libnemo-private/nemo-icon-dnd.h>
 #include <libnemo-private/nemo-metadata.h>
 #include <libnemo-private/nemo-module.h>
-#include <libnemo-private/nemo-search-directory.h>
 #include <libnemo-private/nemo-thumbnails.h>
 #include <libnemo-private/nemo-tree-view-drag-dest.h>
 #include <libnemo-private/nemo-clipboard.h>
+#include <libnemo-private/nemo-search-directory.h>
 
 #define DEBUG_FLAG NEMO_DEBUG_LIST_VIEW
 #include <libnemo-private/nemo-debug.h>
@@ -3788,7 +3788,7 @@ static const GtkActionEntry list_view_entries[] = {
   /* name, stock id */         { NEMO_ACTION_REFRESH_FOLDER, "xsi-view-refresh-symbolic",
   /* label, accelerator */       N_("Refresh"), "",
   /* tooltip */                  N_("Refresh the contents of the folder"),
-				 G_CALLBACK (action_refresh_folder_callback) },
+                 G_CALLBACK (action_refresh_folder_callback) },
 };
 
 static void
@@ -3808,9 +3808,8 @@ nemo_list_view_merge_menus (NemoView *view)
   gtk_action_group_set_translation_domain (action_group, GETTEXT_PACKAGE);
   list_view->details->list_action_group = action_group;
 
-  gtk_action_group_add_actions (action_group,
-				list_view_entries, G_N_ELEMENTS (list_view_entries),
-				list_view);
+  gtk_action_group_add_actions (action_group, list_view_entries,
+    G_N_ELEMENTS (list_view_entries), list_view);
 
   gtk_ui_manager_insert_action_group (ui_manager, action_group, 0);
   g_object_unref (action_group); /* owned by ui manager */
@@ -3843,10 +3842,8 @@ static void
 nemo_list_view_update_menus (NemoView *view)
 {
 	NemoListView *list_view;
-	NemoFile *directory_as_file;
 	GtkAction *action;
 	GList *selection;
-	gboolean in_virtual_directory;
 	gboolean showing_search;
 
         list_view = NEMO_LIST_VIEW (view);
@@ -3857,28 +3854,19 @@ nemo_list_view_update_menus (NemoView *view)
 	}
 
 	selection = nemo_view_get_selection (view);
-	directory_as_file = nemo_view_get_directory_as_file (view);
 
-	/* Reloading a folder we are not looking inside of only tells us its item
-	 * count, and in these the count is either meaningless or not ours to
-	 * refresh. A folder found by a search is an ordinary folder and can be
-	 * reloaded, the search itself cannot. */
-	in_virtual_directory = directory_as_file != NULL &&
-			       (nemo_file_is_in_recent (directory_as_file) ||
-				nemo_file_is_in_favorites (directory_as_file));
+	/* Specifically check for search -- if in search and we try to
+	 * refresh the view (no selection) bad things (TM) happen. */
 	showing_search = NEMO_IS_SEARCH_DIRECTORY (nemo_view_get_model (view));
 
 	action = gtk_action_group_get_action (list_view->details->list_action_group,
-					     NEMO_ACTION_REFRESH_FOLDER);
+		NEMO_ACTION_REFRESH_FOLDER);
+
 	gtk_action_set_visible (action, files_are_all_directories (selection) &&
-					!in_virtual_directory &&
-					(!showing_search || selection != NULL));
+		(!showing_search || selection != NULL));
 
 	nemo_file_list_free (selection);
 
-	/* Last, because the parent applies the context menu visibility
-	 * preferences at the end of its update, and those have to be applied on
-	 * top of the visibility we just decided. */
 	NEMO_VIEW_CLASS (nemo_list_view_parent_class)->update_menus (view);
 }
 
